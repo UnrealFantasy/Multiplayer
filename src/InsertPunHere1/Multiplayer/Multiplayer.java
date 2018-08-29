@@ -11,7 +11,7 @@ public class Multiplayer extends Canvas implements Runnable {
     private static final int TARGET_WIDTH = 1270;
     private static final int TARGET_HEIGHT = 700;
 
-    private static int SCALE = 3;
+    private static int SCALE = 6;
 
     private static final int WIDTH = TARGET_WIDTH / SCALE;
     private static final int HEIGHT = TARGET_HEIGHT / SCALE;
@@ -23,9 +23,9 @@ public class Multiplayer extends Canvas implements Runnable {
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
     private int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 
-    private Level level = new Level(new Sheet("/levelSpriteSheet.png"), WIDTH, HEIGHT);
+    private Level level = new Level("./resources/level.lvl", new Sheet("/levelSpriteSheet.png"), WIDTH, HEIGHT);
 
-    private Player player = new Player(new Sheet("/playerSpriteSheet.png"), WIDTH, HEIGHT, 0, 0, 2);
+    private Player player = new Player( new Sheet("/playerSpriteSheet.png"), WIDTH, HEIGHT, 0, 0, 2);
 
     private Input input;
 
@@ -55,7 +55,7 @@ public class Multiplayer extends Canvas implements Runnable {
 
         input = new Input();
 
-        frame.addKeyListener(input);
+        addKeyListener(input);
     }
 
     private synchronized void initialize() {
@@ -139,18 +139,6 @@ public class Multiplayer extends Canvas implements Runnable {
 
         for (int index = 0; index < pixels.length; index++)
             pixels[index] = 0;
-
-        for(int index = 0; index < 4; index++) {
-            int tile = new Random().nextInt(9);
-
-            while(tile == Level.Tiles.WATER)
-                tile = new Random().nextInt(9);
-
-            int x = new Random().nextInt(Level.levelSize);
-            int y = new Random().nextInt(Level.levelSize);
-
-            level.getTiles()[x + y * Level.levelSize] = tile;
-        }
     }
 
     private void render() {

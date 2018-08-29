@@ -45,7 +45,12 @@ public class Player {
                         int fx = mx + sx;
                         int fy = my + sy;
 
-                        pixels[fx + fy * width] = sprite[(x / scale) + (y / scale) * Sheet.SPRITE_WIDTH];
+                        int pixel = sprite[(x / scale) + (y / scale) * Sheet.SPRITE_WIDTH];
+
+                        if(pixel == 0xFFFF00FF)
+                            continue;
+
+                        pixels[fx + fy * width] = pixel;
                     }
                 }
             }

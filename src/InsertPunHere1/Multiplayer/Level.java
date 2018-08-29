@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Level {
-    static int levelSize = 128;
+    private static int levelSize = 128;
 
     private int[] tiles = new int[levelSize * levelSize];
 
@@ -23,9 +23,10 @@ public class Level {
         static final int WOOD = 2;
         static final int STONE = 3;
         static final int METAL = 4;
-        static final int GOLD = 5;
-        static final int DIAMOND = 6;
-        static final int OBSIDIAN = 7;
+        static final int IRON = 5;
+        static final int GOLD = 6;
+        static final int DIAMOND = 7;
+        static final int OBSIDIAN = 8;
     }
 
     Level(String file, Sheet sheet, int width, int height) {
@@ -47,7 +48,7 @@ public class Level {
     Level(Sheet sheet, int width, int height) {
         for (int lx = 0; lx < levelSize; lx++) {
             for (int ly = 0; ly < levelSize; ly++) {
-                tiles[lx + ly * levelSize] = Tiles.GRASS;
+                tiles[lx + ly * levelSize] = Tiles.IRON;
             }
         }
 
