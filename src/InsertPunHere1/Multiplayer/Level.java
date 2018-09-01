@@ -1,13 +1,16 @@
 package InsertPunHere1.Multiplayer;
 
-import java.io.IOException;
+import java.io.*;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Level {
-    private static int levelSize = 128;
+    public static int levelSize = 128;
 
     private int[] tiles = new int[levelSize * levelSize];
 
@@ -29,37 +32,41 @@ public class Level {
         static final int OBSIDIAN = 8;
     }
 
-    Level(String file, Sheet sheet, int width, int height) {
+    Level(String file, Sheet sheet, Player player, int width, int height) {
+        this(sheet, width, height);
+
         this.sheet = sheet;
 
         this.width = width;
         this.height = height;
 
-        try {
-            tiles = read(file);
-        }catch(IOException e) {
-            e.printStackTrace();
-        }
 
-        xOffset += levelSize * Sheet.SPRITE_WIDTH;
-        yOffset += levelSize * Sheet.SPRITE_HEIGHT;
     }
 
     Level(Sheet sheet, int width, int height) {
-        for (int lx = 0; lx < levelSize; lx++) {
-            for (int ly = 0; ly < levelSize; ly++) {
-                tiles[lx + ly * levelSize] = Tiles.IRON;
-            }
-        }
-
         this.sheet = sheet;
 
         this.width = width;
         this.height = height;
+
+        for (int lx = 0; lx < levelSize; lx++) {
+            for (int ly = 0; ly < levelSize; ly++) {
+                if (lx % 4 == 0 && ly % 4 == 0)
+                    tiles[lx + ly * levelSize] = Tiles.STONE;
+                else if (lx % 6 == 0 && ly % 6 == 0)
+                    tiles[lx + ly * levelSize] = Tiles.METAL;
+                else if (lx % 7 == 0 && ly % 7 == 0)
+                    tiles[lx + ly * levelSize] = Tiles.IRON;
+                else if (lx % 9 == 0 && ly % 9 == 0)
+                    tiles[lx + ly * levelSize] = Tiles.DIAMOND;
+                else
+                    tiles[lx + ly * levelSize] = Tiles.GRASS;
+            }
+        }
     }
 
-    private int[] read(String file) throws IOException {
-        List<String> lines = Files.readAllLines(Paths.get(file));
+    private void read(String file, Player player) throws IOException, URISyntaxException {
+        List<String> lines = Files.readAllLines(Paths.get(this.getClass().getResource(file).toURI()));
 
         List<Integer> xTiles = new ArrayList<>();
         List<Integer> yTiles = new ArrayList<>();
@@ -67,20 +74,39 @@ public class Level {
         List<Integer> zTiles = new ArrayList<>();
 
         for (String line : lines) {
-            String[] tokens = line.split(" ");
+            String[] tokens = line.split("\\s+");
 
-            switch(tokens[0]) {
-                case "t":
+            switch (tokens[0]) {
+                case "tile":
                     xTiles.add(Integer.parseInt(tokens[1]));
                     yTiles.add(Integer.parseInt(tokens[2]));
 
                     zTiles.add(Integer.parseInt(tokens[3]));
 
                     break;
-                default:
-                    break;
+                case "player":
+                    switch (tokens[2]) {
+                        case "position":
+                            player.setX(Integer.parseInt(tokens[3]));
+                            player.setY(Integer.parseInt(tokens[4]));
 
-                    // TODO: File format features.
+                            xOffset = -player.getX();
+                            yOffset = -player.getY();
+                        case "sequence":
+                            player.setSequence(Integer.parseInt(tokens[3]));
+                            break;
+                        case "health":
+                            player.setHealth(Integer.parseInt(tokens[3]));
+                        case "frame":
+                            player.setFrame(Integer.parseInt(tokens[3]));
+                            break;
+                    }
+
+                    break;
+                default:
+                    // TODO: File format features;
+
+                    break;
             }
         }
 
@@ -101,19 +127,39 @@ public class Level {
         greatestX++;
         greatestY++;
 
-        if(greatestX != greatestY)
-            throw new IllegalStateException("Level file size must be square.");
+        if (greatestX != greatestY)
+            throw new IllegalStateException("Level file failed to be loaded.");
 
         levelSize = greatestX;
 
         int index = 0;
 
-        int[] tiles = new int[levelSize * levelSize];
-
-        for(Integer zTile : zTiles)
+        for (Integer zTile : zTiles)
             tiles[index++] = zTile;
+    }
 
-        return tiles;
+    void write(String file, Player player) {
+        try {
+            FileWriter fileWriter = new FileWriter(new File(file));
+
+            PrintWriter printWriter = new PrintWriter(fileWriter);
+
+            printWriter.printf("\nplayer position %s %d %d", player.getName(), player.getX(), player.getY());
+            printWriter.printf("\nplayer sequence %s %d", player.getName(), player.getSequence());
+            printWriter.printf("\nplayer health %s %d", player.getName(), player.getHealth());
+
+            for (int lx = 0; lx < levelSize; lx++) {
+                for (int ly = 0; ly < levelSize; ly++) {
+                    printWriter.printf("\ntile %d %d %d", lx, ly, tiles[lx + ly * levelSize]);
+                }
+            }
+
+            fileWriter.flush();
+
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void render(int[] pixels) {

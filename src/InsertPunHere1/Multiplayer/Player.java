@@ -5,6 +5,10 @@ import java.awt.event.KeyEvent;
 public class Player {
     private static final int FRAMES = 4;
 
+    private int health = 9;
+
+    private String name;
+
     private int width, height;
 
     private int x, y;
@@ -17,7 +21,7 @@ public class Player {
 
     private int frame = 0, sequence = 0;
 
-    Player(Sheet sheet, int width, int height, int x, int y, int scale) {
+    Player(Sheet sheet, String name, int width, int height, int x, int y, int scale) {
         this.width = width;
         this.height = height;
 
@@ -27,10 +31,17 @@ public class Player {
         this.scale = scale;
 
         this.sheet = sheet;
+
+        this.name = name;
     }
 
     void render(int[] pixels) {
-        int[] sprite = sheet.getSprite(frame, sequence);
+        int[] sprite;
+
+        if (idle)
+            sprite = sheet.getSprite(0, sequence);
+        else
+            sprite = sheet.getSprite(frame, sequence);
 
         int px = (width / 2) - (Sheet.SPRITE_WIDTH * scale);
         int py = (height / 2) - (Sheet.SPRITE_HEIGHT * scale);
@@ -47,7 +58,7 @@ public class Player {
 
                         int pixel = sprite[(x / scale) + (y / scale) * Sheet.SPRITE_WIDTH];
 
-                        if(pixel == 0xFFFF00FF)
+                        if (pixel == 0xFFFF00FF)
                             continue;
 
                         pixels[fx + fy * width] = pixel;
@@ -66,44 +77,64 @@ public class Player {
                 frame = 0;
         }
 
+        boolean idle = true;
+
         if (input.getKey(KeyEvent.VK_W) || input.getKey(KeyEvent.VK_UP)) {
             level.yOffset++;
 
+            y--;
+
             sequence = 0;
+
+            idle = false;
         }
 
         if (input.getKey(KeyEvent.VK_A) || input.getKey(KeyEvent.VK_LEFT)) {
             level.xOffset++;
 
+            x--;
+
             sequence = 1;
+
+            idle = false;
         }
 
         if (input.getKey(KeyEvent.VK_S) || input.getKey(KeyEvent.VK_DOWN)) {
             level.yOffset--;
 
+            y++;
+
             sequence = 2;
+
+            idle = false;
         }
 
         if (input.getKey(KeyEvent.VK_D) || input.getKey(KeyEvent.VK_RIGHT)) {
             level.xOffset--;
 
+            x++;
+
             sequence = 3;
+
+            idle = false;
         }
+
+        this.idle = idle;
     }
 
-    public int getX() {
+    int getX() {
         return x;
     }
 
-    public void setX(int x) {
+    void setX(int x) {
         this.x = x;
     }
 
-    public int getY() {
+    int getY() {
         return y;
     }
 
-    public void setY(int y) {
+    void setY(int y) {
         this.y = y;
     }
 
@@ -129,5 +160,53 @@ public class Player {
 
     public void setSheet(Sheet sheet) {
         this.sheet = sheet;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
+    }
+
+    public int getFrame() {
+        return frame;
+    }
+
+    void setFrame(int frame) {
+        this.frame = frame;
+    }
+
+    int getSequence() {
+        return sequence;
+    }
+
+    void setSequence(int sequence) {
+        this.sequence = sequence;
+    }
+
+    String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getHealth() {
+        return health;
+    }
+
+    public void setHealth(int health) {
+        this.health = health;
     }
 }

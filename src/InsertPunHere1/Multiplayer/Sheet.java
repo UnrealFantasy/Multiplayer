@@ -1,6 +1,7 @@
 package InsertPunHere1.Multiplayer;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
 import java.io.IOException;
@@ -41,7 +42,24 @@ public class Sheet {
     }
 
     int[] getSprite(int tx, int ty) {
-        return sprites[tx + ty * (width / SPRITE_WIDTH)];
+        while(tx > (width / SPRITE_WIDTH))
+            ty++;
+
+        int[] sprite = sprites[tx + ty * (width / SPRITE_WIDTH)];
+
+        int whitePixels = 0;
+
+        for(int sx = 0; sx < SPRITE_WIDTH; sx++) {
+            for(int sy = 0; sy < SPRITE_HEIGHT; sy++) {
+                if(sprite[sx + sy * SPRITE_WIDTH] == new Color(255, 255, 255).getRGB())
+                    whitePixels++;
+            }
+        }
+
+        if(whitePixels == SPRITE_WIDTH * SPRITE_HEIGHT)
+            sprite = sprites[1];
+
+        return sprite;
     }
 
     int getPixel(int[] sprite, int px, int py) {

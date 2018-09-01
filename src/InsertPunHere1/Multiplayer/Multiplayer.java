@@ -2,9 +2,11 @@ package InsertPunHere1.Multiplayer;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.io.IOException;
 import java.util.Random;
 
 public class Multiplayer extends Canvas implements Runnable {
@@ -23,15 +25,19 @@ public class Multiplayer extends Canvas implements Runnable {
     private BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_RGB);
     private int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 
-    private Level level = new Level("./resources/level.lvl", new Sheet("/levelSpriteSheet.png"), WIDTH, HEIGHT);
+    private Player player;
 
-    private Player player = new Player( new Sheet("/playerSpriteSheet.png"), WIDTH, HEIGHT, 0, 0, 2);
+    private Level level;
+
+    private HUD HUD = new HUD(new Sheet("/guiSpriteSheet.png"), WIDTH, HEIGHT);
 
     private Input input;
 
     private boolean running = false;
 
-    private Multiplayer() {
+    private boolean shouldRender = false;
+
+    private Multiplayer() throws IOException {
         setMinimumSize(new Dimension(WIDTH * SCALE, HEIGHT * SCALE));
         setMaximumSize(new Dimension(WIDTH * SCALE, HEIGHT * SCALE));
         setPreferredSize(new Dimension(WIDTH * SCALE, HEIGHT * SCALE));
@@ -66,6 +72,16 @@ public class Multiplayer extends Canvas implements Runnable {
         running = true;
 
         new Thread(this).start();
+
+        JOptionPane.showMessageDialog(this, "Assets finished loading.");
+
+        String name = JOptionPane.showInputDialog("Enter your desired username: ");
+
+        player = new Player(new Sheet("/playerSpriteSheet.png"), name, WIDTH, HEIGHT, 0, 0, 2);
+
+        level = new Level("/level.lvl", new Sheet("/levelSpriteSheet.png"), player, WIDTH, HEIGHT);
+
+        shouldRender = true;
     }
 
     private synchronized void stop() {
@@ -135,10 +151,40 @@ public class Multiplayer extends Canvas implements Runnable {
     private void tick() {
         tickCount++;
 
-        player.tick(input, level, tickCount);
+        if(shouldRender) {
+            player.tick(input, level, tickCount);
 
-        for (int index = 0; index < pixels.length; index++)
-            pixels[index] = 0;
+            HUD.tick(input);
+
+            if(input.getKey(KeyEvent.VK_0) && tickCount % 8 == 0) {
+                level.write("./resources/level.lvl", player);
+
+                System.out.println("Save completed.");
+            }
+
+            if(input.getKey(KeyEvent.VK_R) && tickCount % 8 == 0) {
+                for(int index = 0; index < Level.levelSize * Level.levelSize; index++) {
+                    int tile = new Random().nextInt(10);
+
+                    while(tile == Level.Tiles.WATER)
+                        tile = new Random().nextInt(10);
+
+                    level.getTiles()[index] = tile;
+                }
+            }
+
+            if(input.getKey(KeyEvent.VK_M) && tickCount % 8 == 0)
+                player.setHealth(player.getHealth() + 1);
+
+            if(input.getKey(KeyEvent.VK_N) && tickCount % 8 == 0)
+                player.setHealth(player.getHealth() - 1);
+
+            for (int index = 0; index < pixels.length; index++)
+                pixels[index] = 0;
+        }else {
+            for(int index = 0; index < pixels.length; index++)
+                pixels[index] = index + tickCount;
+        }
     }
 
     private void render() {
@@ -150,9 +196,13 @@ public class Multiplayer extends Canvas implements Runnable {
             return;
         }
 
-        level.render(pixels);
+        if(shouldRender) {
+            level.render(pixels);
 
-        player.render(pixels);
+            player.render(pixels);
+
+            HUD.render(player, pixels);
+        }
 
         Graphics graphics = bufferStrategy.getDrawGraphics();
 
@@ -163,7 +213,7 @@ public class Multiplayer extends Canvas implements Runnable {
         bufferStrategy.show();
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         new Multiplayer().start();
     }
 }
